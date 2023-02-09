@@ -2,9 +2,16 @@ from contextlib import asynccontextmanager
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.decl_api import DeclarativeMeta
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from typing import Generator, Optional
+from typing import Any, Coroutine, Generator, Optional
 
 
+# Обработчик БД, была сначала идея передавать класс в инициализатор других классов,
+# поэтому был выбран Singleton, потом я от этой, не побоюсь этого слова - "гениальной", хах, затеи отказался и стал
+# передавать экземпляр обработчика, но Sigleton пока оставлю, т.к. потом собираюсь расширить 
+# тестовое задание добавив новый функционал и там уже буду передавать класс.
+
+# В дальнейшем есть затея добавить полноценный конфигуратор приложения, а не константы в файле main.py
+# Плюс хочется добавить возможность добавления других мониторов, для более полной картины состояния системы
 
 class DataBaseHandler:
     def __new__(cls, *args, **kwargs):
@@ -44,5 +51,8 @@ class DataBaseHandler:
     def setup(self, db_url: str) -> None:
         self.__engine = create_async_engine(db_url, echo=True, future=True)
         self.__session_maker = sessionmaker(self.__engine, expire_on_commit=False, class_=AsyncSession)
+    
+    async def release(self) -> Coroutine[Any, Any, None]:
+        await self.__engine.dispose()
     
     

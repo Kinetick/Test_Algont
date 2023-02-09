@@ -19,6 +19,11 @@ class ABCMonitor:
         raise NotImplementedError
 
 
-class ABCDataBaseObjectFabric:
+class ABCDataBaseObjectFact:
     def create(self) -> Any:
+        raise NotImplementedError
+
+
+class ABCFigure:
+    async def save(self) -> Coroutine[Any, Any, None]:
         raise NotImplementedError
