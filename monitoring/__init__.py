@@ -10,8 +10,7 @@ from psutil import cpu_percent
 from typing import Any, Coroutine, Dict, Type, List, Tuple, Optional
 
 from monitoring.ABC import ABCMonitor, ABCDataBaseObjectFact, ABCFigure
-from monitoring.db import DataBaseHandler
-from monitoring.db.models import CpuLoads
+
 
 class LinearFigure(ABCFigure):
     def __init__(self, y_val: List[float], title: str, x_label: str, y_label: str, fig_size: Tuple[int, int], save_path: PathLike, x_step: Optional[int] = None) -> None:
@@ -54,12 +53,13 @@ class LinearFigure(ABCFigure):
 class CpuLoadsObjectFact(ABCDataBaseObjectFact):
     
     @staticmethod
-    def create(load: float, time: datetime) -> CpuLoads:
+    def create(load: float, time: datetime):
         return CpuLoads(r_value=load, r_time=time)
 
+from monitoring.db.models import CpuLoads
 # Монитор для получения загрузки ЦП и записи значения в БД
 class CpuLoadMonitor(ABCMonitor):
-    def __init__(self, db_handler: DataBaseHandler, fact: Type[CpuLoadsObjectFact] = CpuLoadsObjectFact) -> None:
+    def __init__(self, db_handler, fact: Type[CpuLoadsObjectFact] = CpuLoadsObjectFact) -> None:
         self.__db_handler = db_handler
         self.__fact = fact()
     
@@ -101,9 +101,8 @@ class MonitoringServer:
         return value
     
     async def __release_db(self, *args):
-        print(args)
         yield
-        db_handler: DataBaseHandler = self.__get_parameter(self.__app['config'], 'DB_HANDLER')
+        db_handler = self.__get_parameter(self.__app['config'], 'DB_HANDLER')
         await db_handler.release()
     
     def __setup_app(self) -> None:

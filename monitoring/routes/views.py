@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import sqlalchemy as sql
 from aiohttp.web import Application, Request, Response
 from datetime import datetime, timedelta
+from aiohttp_jinja2 import render_template
 from typing import Any, Coroutine, List
 
 from monitoring import LinearFigure
@@ -22,19 +23,19 @@ class IndexHandler:
         from_date_value = to_date_value - timedelta(minutes=self.__app['config']['SLICE_PERIOD_MINUTES'])
         moment_load_query = sql.select(CpuLoads)\
             .where(CpuLoads.r_time.between(sql.func.datetime(from_date_value), sql.func.datetime(to_date_value)))\
-            .order_by(CpuLoads.r_time)
+            .order_by(sql.func.datetime(CpuLoads.r_time))
             
         average_load_query = sql.select(CpuLoads)\
             .where(CpuLoads.r_time.between(sql.func.datetime(from_date_value), sql.func.datetime(to_date_value)))\
             .group_by(sql.func.strftime('%M', CpuLoads.r_time))\
-            .order_by(CpuLoads.r_time)
+            .order_by(sql.func.datetime(CpuLoads.r_time))
         
         async with self.__app['config']['DB_HANDLER'].get_session() as session:
             res_moment = await session.execute(moment_load_query)
             res_avg = await session.execute(average_load_query)
             moment = self.__get_result(res_moment)
             average = self.__get_result(res_avg)
-        print(average)
+            
         moment_fig = LinearFigure(
             moment,
             'Моментальная загрузка ЦП',
@@ -42,13 +43,13 @@ class IndexHandler:
             'Загрузка процессора, %',
             (10, 10),
             self.__app['config']['IMAGE_MOMENT_PATH'],
-            10
+            30
             )
 
         avg_fig = LinearFigure(
             average,
             'Средняя загрузка ЦП',
-            f'Интервалы сканирования, 1 интервал = {self.__app["config"]["SCAN_PERIOD_SEC"]} сек.',
+            f'Время, 1 интервал = {round(len(average) / self.__app["config"]["SLICE_PERIOD_MINUTES"], 2)} мин.',
             'Загрузка процессора, %',
             (10, 10),
             self.__app['config']['IMAGE_AVG_PATH']
@@ -65,4 +66,7 @@ class IndexHandler:
         # Скорее всего, нестабильная отрисовка связана с использованием одного экземпляра pyplot, две сопрограммы мешают друг другу.
         # Конечно можно было бы разместить два графика в одной фигуре через subplot, но захотелось сделать из раздельно, отсавлю как есть.
         # await aio.gather(moment_fig.save(), avg_fig.save())
-        return Response(status=200, text='OK!')
+        
+        render = render_template('index.jinja2', request=request, context={'page_name': 'Загрузка ЦП'})
+        
+        return render

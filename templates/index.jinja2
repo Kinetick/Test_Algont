@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="{{ url('static', filename='styles/syles.css') }}">
+    {% block title %}
+        <title>{{ page_name }}</title>
+    {% endblock title %}
+    
+</head>
+<body>
+    <div class="figure_wrap">
+        <div class="figure"><img src="{{ url('static', filename='images/inmoment/m_load.png') }}"></div>
+        <div class="figure"><img src="{{ url('static', filename='images/avg/av_load.png') }}"></div>
+    </div>
+</body>
+</html>

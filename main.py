@@ -32,6 +32,8 @@ async def main():
     server = monitoring.MonitoringServer(5000, APP_VARS)
     # Создание таблицы для хранения записей по загрузке ЦП
     await APP_VARS['DB_HANDLER'].create(Base)
+    # Синхронизация БД, заполняет строки с простоем сервиса
+    await APP_VARS['DB_HANDLER'].syncronize(APP_VARS['SCAN_PERIOD_SEC'])
     # Собственно сам мониторинг, состоит из двух задач
     # которые выполняются конкурентно
     res = await aio.gather(monitor.run(APP_VARS['SCAN_PERIOD_SEC']), server.start())
