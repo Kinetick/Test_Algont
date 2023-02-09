@@ -23,6 +23,7 @@ class LinearFigure(ABCFigure):
         self.__fig_size = fig_size
         self.__save_path = save_path
         self.__plt = plt
+        self.__plt.switch_backend('agg')
     
     async def _cleaner(self) -> Coroutine[Any, Any, None]:
         if await aos.path.exists(self.__save_path):
