@@ -16,7 +16,7 @@ class IndexHandler:
     
     @staticmethod
     def __get_result(res_iter: sql.ChunkedIteratorResult) -> List[float]:
-        return [r.r_value for r in res_iter.scalars()]
+        return [r.r_value if not isinstance(r, float) else round(r, 2) for r in res_iter.scalars()]
     
     async def get(self, request: Request) -> Coroutine[Any, Any, Response]:
         to_date_value = datetime.now()
@@ -25,7 +25,7 @@ class IndexHandler:
             .where(CpuLoads.r_time.between(sql.func.datetime(from_date_value), sql.func.datetime(to_date_value)))\
             .order_by(sql.func.datetime(CpuLoads.r_time))
             
-        average_load_query = sql.select(CpuLoads)\
+        average_load_query = sql.select(sql.func.avg(CpuLoads.r_value))\
             .where(CpuLoads.r_time.between(sql.func.datetime(from_date_value), sql.func.datetime(to_date_value)))\
             .group_by(sql.func.strftime('%M', CpuLoads.r_time))\
             .order_by(sql.func.datetime(CpuLoads.r_time))
@@ -49,7 +49,7 @@ class IndexHandler:
         avg_fig = LinearFigure(
             average,
             'Средняя загрузка ЦП',
-            f'Время, 1 интервал = {round(len(average) / self.__app["config"]["SLICE_PERIOD_MINUTES"], 2)} мин.',
+            f'Время, 1 интервал = 1 мин.',
             'Загрузка процессора, %',
             (10, 10),
             self.__app['config']['IMAGE_AVG_PATH']
